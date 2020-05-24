@@ -170,18 +170,6 @@ public class MainActivity extends AppCompatActivity {
                         iBeaconFrame.setAdvInterval(300);
                         iBeaconFrame.setUuid(iuuid);
 
-                        // set "namespaceId" and "instanceId" of UID
-//                        uidFrame.setNamespaceId("0123456789abdcdcba12");
-//                        uidFrame.setInstanceId("0123456789dc");
-                        // the other parameters of slot
-//                        uidFrame.setRadiotxPower(4); // Radio txpower.
-//                        uidFrame.setAdvInterval(600);// advertisement interval
-//                        uidFrame.setAdvtxPower(-3); // RSSI@0m
-
-                        // write to device.
-                        // detail: 1.let No.1 slot advertise UID data, namespaceId：0123456789abdcdcba12 instanceId：0123456789dc
-                        //         2.set No.1 slot advertisement interval to 600ms, RSSI@0m to -3dbm, radio txpower to 4dbm
-                        //The second parameter is the curSlot number
                         mtPeripheral.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
                             @Override
                             public void onOperation(boolean success, MTException mtException) {
