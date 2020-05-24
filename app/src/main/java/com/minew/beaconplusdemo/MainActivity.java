@@ -26,22 +26,37 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.minew.beaconplus.sdk.MTCentralManager;
+import com.minew.beaconplus.sdk.MTConnectionFeature;
+import com.minew.beaconplus.sdk.MTConnectionHandler;
 import com.minew.beaconplus.sdk.MTPeripheral;
 import com.minew.beaconplus.sdk.Utils.LogUtils;
 import com.minew.beaconplus.sdk.enums.BluetoothState;
+import com.minew.beaconplus.sdk.enums.ConnectState;
 import com.minew.beaconplus.sdk.enums.ConnectionStatus;
+import com.minew.beaconplus.sdk.enums.FeatureSupported;
+import com.minew.beaconplus.sdk.enums.FrameType;
+import com.minew.beaconplus.sdk.enums.PasswordState;
+import com.minew.beaconplus.sdk.enums.TriggerType;
+import com.minew.beaconplus.sdk.enums.Version;
 import com.minew.beaconplus.sdk.exception.MTException;
+import com.minew.beaconplus.sdk.frames.IBeaconFrame;
+import com.minew.beaconplus.sdk.frames.LineBeaconFrame;
 import com.minew.beaconplus.sdk.frames.MinewFrame;
+import com.minew.beaconplus.sdk.frames.UidFrame;
 import com.minew.beaconplus.sdk.interfaces.ConnectionStatueListener;
 import com.minew.beaconplus.sdk.interfaces.GetPasswordListener;
+import com.minew.beaconplus.sdk.interfaces.MTCOperationCallback;
 import com.minew.beaconplus.sdk.interfaces.MTCentralManagerListener;
 import com.minew.beaconplus.sdk.interfaces.OnBluetoothStateChangedListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static com.minew.beaconplus.sdk.enums.FrameType.FrameiBeacon;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MTCentralManager mMtCentralManager;
     private RecycleAdapter   mAdapter;
+    private MTPeripheral     mtPeripheralSelected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +138,85 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(View view, int position) {
                 MTPeripheral mtPeripheral = mAdapter.getData(position);
-                mMtCentralManager.connect(mtPeripheral, connectionStatueListener);
+
+                String name = mtPeripheral.mMTFrameHandler.getName();
+                String mac = mtPeripheral.mMTFrameHandler.getMac();
+                int rssi = mtPeripheral.mMTFrameHandler.getRssi();
+                int battery = mtPeripheral.mMTFrameHandler.getBattery();
+
+
+                List<MinewFrame> advFrames = mtPeripheral.mMTFrameHandler.getAdvFrames();
+                for (int i = 0; i < advFrames.size(); i++){
+                    MinewFrame advFrame = advFrames.get(i);
+                    FrameType frameType = advFrame.getFrameType();
+
+                    if (frameType == FrameiBeacon) {
+                        IBeaconFrame iBeaconframe = (IBeaconFrame) advFrame;
+                        int txPower = iBeaconframe.getTxPower();
+                        int radioPower = iBeaconframe.getRadiotxPower();
+                        int major = iBeaconframe.getMajor();
+                        int minor = iBeaconframe.getMinor();
+                        String iuuid = iBeaconframe.getUuid();
+
+
+                        // create a uid instance
+                        IBeaconFrame iBeaconFrame = new IBeaconFrame();
+                        iBeaconFrame.setFrameType(FrameiBeacon);
+                        iBeaconFrame.setMinor(111);
+                        iBeaconFrame.setMajor(222);
+                        iBeaconFrame.setCurSlot(1);
+                        iBeaconFrame.setAdvtxPower(txPower);
+                        iBeaconFrame.setRadiotxPower(radioPower);
+                        iBeaconFrame.setAdvInterval(300);
+                        iBeaconFrame.setUuid(iuuid);
+
+                        // set "namespaceId" and "instanceId" of UID
+//                        uidFrame.setNamespaceId("0123456789abdcdcba12");
+//                        uidFrame.setInstanceId("0123456789dc");
+                        // the other parameters of slot
+//                        uidFrame.setRadiotxPower(4); // Radio txpower.
+//                        uidFrame.setAdvInterval(600);// advertisement interval
+//                        uidFrame.setAdvtxPower(-3); // RSSI@0m
+
+                        // write to device.
+                        // detail: 1.let No.1 slot advertise UID data, namespaceId：0123456789abdcdcba12 instanceId：0123456789dc
+                        //         2.set No.1 slot advertisement interval to 600ms, RSSI@0m to -3dbm, radio txpower to 4dbm
+                        //The second parameter is the curSlot number
+                        mtPeripheral.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
+                            @Override
+                            public void onOperation(boolean success, MTException mtException) {
+                                if(success){
+                                    Log.v("beaconplus","Success!");
+                                }else{
+                                    Log.v("beaconplus",mtException.getMessage());
+                                }
+                            }
+                        });
+
+
+
+                    }
+                }
+
+                //mtPeripheralSelected = mtPeripheral;
+                //mMtCentralManager.stopScan();
+//                try {
+//                    Thread.sleep(2000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+
+                //ArrayList<MinewFrame> advFrames = mtPeripheral.mMTFrameHandler.getAdvFrames();
+
+//                for (int counter = 0; counter < advFrames.size(); counter++) {
+//                    MinewFrame minewFrame = advFrames.get(counter);
+//
+//                    //System.out.println(advFrames.get(counter));
+//                    minewFrame.
+//                }
+//                mMtCentralManager.stopScan();
+//                mMtCentralManager.connect(mtPeripheral, connectionStatueListener);
+
             }
 
             @Override
@@ -132,24 +226,65 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void getInfo(MTPeripheral mtPeripheral){
+        // device features
+        MTConnectionFeature mtConnectionFeature = mtPeripheral.mMTConnectionHandler.mTConnectionFeature;
+//// atitude of slot(s),
+//        int slotAtitude = mtConnectionFeature.getSlotAtitude();
+//        // parameters can be modified：none，adv,txpower,adv/txpower
+//        FeatureSupported featureSupported = mtConnectionFeature.getFeatureSupported();
+//// // frames supported（multiple）
+//        List<FrameType> supportedSlots = mtConnectionFeature.getSupportedSlots();
+//// Txpower supported（multiple）
+//        byte[] supportedTxpowers = mtConnectionFeature.getSupportedTxpowers();
+//// trigger supported（multiple）
+//        ArrayList<TriggerType> supportTriggers = mtConnectionFeature.supportTriggers;
+//// Version of firmware;
+        Version version = mtConnectionFeature.getVersion();
+    }
+
+
     private ConnectionStatueListener connectionStatueListener = new ConnectionStatueListener() {
         @Override
         public void onUpdateConnectionStatus(final ConnectionStatus connectionStatus, final GetPasswordListener getPasswordListener) {
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    //ArrayList<MinewFrame> allFrames;
                     switch (connectionStatus) {
                         case CONNECTING:
                             Log.e("tag", "CONNECTING");
                             Toast.makeText(MainActivity.this, "CONNECTING", Toast.LENGTH_SHORT).show();
                             break;
                         case CONNECTED:
-                            Log.e("tag", "CONNECTED");
-                            Toast.makeText(MainActivity.this, "CONNECTED", Toast.LENGTH_SHORT).show();
+                            {
+                                Log.e("tag", "CONNECTED");
+                                Toast.makeText(MainActivity.this, "CONNECTED", Toast.LENGTH_SHORT).show();
+//                                ArrayList<MinewFrame> allFrames = mtPeripheralSelected.mMTFrameHandler.getAdvFrames();
+                            }
                             break;
                         case READINGINFO:
                             Log.e("tag", "READINGINFO");
                             Toast.makeText(MainActivity.this, "READINGINFO", Toast.LENGTH_SHORT).show();
+
+//                            mMtCentralManager.stopScan();
+                            MTConnectionHandler mtConnectionHandler2 = mtPeripheralSelected.mMTConnectionHandler;
+                            //mtPeripheralSelected.mMTFrameHandler.;
+// current connection status
+//                            ConnectState connectState = mtConnectionHandler2.getConnectState();
+// password require or not. None, Require
+//                            PasswordState passwordState = mtConnectionHandler2.getPasswordState();
+// device info, such as：（Firmware Version： 0.9.1）;
+                            HashMap<String, String> systeminfos = mtConnectionHandler2.systeminfos;
+                            Log.e("tag", "ZR readinginfo count "+systeminfos.size());
+//                            String manufacturer = systeminfos.get(Constants.manufacturer);
+//                            String modlenumber = systeminfos.get(Constants.modlenumber);
+//                            String macAddress = systeminfos.get(Constants.serialnumber);
+//                            String hardware = systeminfos.get(Constants.hardware);
+//                            String firmware = systeminfos.get(Constants.firmware);
+//                            String software = systeminfos.get(Constants.software);
+                            //mMtCentralManager.startScan();
                             break;
                         case DEVICEVALIDATING:
                             Log.e("tag", "DEVICEVALIDATING");
@@ -173,9 +308,19 @@ public class MainActivity extends AppCompatActivity {
                             Log.e("tag", "READINGFEATURE");
                             Toast.makeText(MainActivity.this, "READINGFEATURE", Toast.LENGTH_SHORT).show();
                             break;
-                        case READINGFRAMES:
+                        case READINGFRAMES: {
                             Log.e("tag", "READINGFRAMES");
                             Toast.makeText(MainActivity.this, "READINGFRAMES", Toast.LENGTH_SHORT).show();
+//                            mtPeripheralSelected.mMTConnectionHandler.allFrames;
+//                            MTConnectionHandler mtConnectionHandler = mtPeripheralSelected.mMTConnectionHandler;
+//                            ArrayList<MinewFrame> allFrames = mtConnectionHandler.allFrames;
+//                            ArrayList<MinewFrame> allFrames = mtPeripheralSelected.mMTFrameHandler.getAdvFrames();
+//                            Log.e("tag", "ZR: count frames " + allFrames.size());
+
+
+
+
+                        }
                             break;
                         case READINGTRIGGERS:
                             Log.e("tag", "READINGTRIGGERS");
