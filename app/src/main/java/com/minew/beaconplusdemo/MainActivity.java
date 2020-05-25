@@ -344,13 +344,13 @@ public class MainActivity extends AppCompatActivity {
                                     iBeaconFrame.setFrameType(FrameiBeacon);
                                     iBeaconFrame.setMinor(111);
                                     iBeaconFrame.setMajor(222);
-                                    iBeaconFrame.setCurSlot(1);
+                                    iBeaconFrame.setCurSlot(i);
                                     iBeaconFrame.setAdvtxPower(txPower);
                                     iBeaconFrame.setRadiotxPower(radioPower);
                                     iBeaconFrame.setAdvInterval(300);
-//                                    iBeaconFrame.setUuid(iuuid);
+                                    iBeaconFrame.setUuid(iuuid);
 
-                                    mtPeripheralSelected.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
+                                    mtPeripheralSelected.mMTConnectionHandler.writeSlotFrame(iBeaconframe, i, new MTCOperationCallback() {
                                         @Override
                                         public void onOperation(boolean success, MTException mtException) {
                                             if(success){
