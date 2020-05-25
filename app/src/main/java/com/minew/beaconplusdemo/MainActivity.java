@@ -340,15 +340,17 @@ public class MainActivity extends AppCompatActivity {
 
 
                                     // create a uid instance
-                                    IBeaconFrame iBeaconFrame = new IBeaconFrame();
-                                    iBeaconFrame.setFrameType(FrameiBeacon);
-                                    iBeaconFrame.setMinor(111);
-                                    iBeaconFrame.setMajor(222);
-                                    iBeaconFrame.setCurSlot(i);
-                                    iBeaconFrame.setAdvtxPower(txPower);
-                                    iBeaconFrame.setRadiotxPower(radioPower);
-                                    iBeaconFrame.setAdvInterval(300);
-                                    iBeaconFrame.setUuid(iuuid);
+                                    //IBeaconFrame iBeaconFrameUpdate = new IBeaconFrame();
+                                    iBeaconframe.setFrameType(FrameiBeacon);
+                                    iBeaconframe.setMinor(111);
+                                    iBeaconframe.setMajor(222);
+                                    iBeaconframe.setCurSlot(i);
+//                                    iBeaconFrameUpdate.setTxPower(txPower);
+//                                    iBeaconFrameUpdate.setAdvtxPower(txPower);
+//                                    iBeaconFrameUpdate.setRadiotxPower(radioPower);
+//                                    iBeaconFrameUpdate.setAdvInterval(300);
+//                                    iBeaconFrameUpdate.setUuid(iuuid);
+
 
                                     mtPeripheralSelected.mMTConnectionHandler.writeSlotFrame(iBeaconframe, i, new MTCOperationCallback() {
                                         @Override
