@@ -138,53 +138,56 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(View view, int position) {
                 MTPeripheral mtPeripheral = mAdapter.getData(position);
-
+                mtPeripheralSelected = mtPeripheral;
                 String name = mtPeripheral.mMTFrameHandler.getName();
                 String mac = mtPeripheral.mMTFrameHandler.getMac();
                 int rssi = mtPeripheral.mMTFrameHandler.getRssi();
                 int battery = mtPeripheral.mMTFrameHandler.getBattery();
 
 
-                List<MinewFrame> advFrames = mtPeripheral.mMTFrameHandler.getAdvFrames();
-                for (int i = 0; i < advFrames.size(); i++){
-                    MinewFrame advFrame = advFrames.get(i);
-                    FrameType frameType = advFrame.getFrameType();
+                mMtCentralManager.connect(mtPeripheral, connectionStatueListener);
 
-                    if (frameType == FrameiBeacon) {
-                        IBeaconFrame iBeaconframe = (IBeaconFrame) advFrame;
-                        int txPower = iBeaconframe.getTxPower();
-                        int radioPower = iBeaconframe.getRadiotxPower();
-                        int major = iBeaconframe.getMajor();
-                        int minor = iBeaconframe.getMinor();
-                        String iuuid = iBeaconframe.getUuid();
+//                List<MinewFrame> advFrames = mtPeripheral.mMTFrameHandler.getAdvFrames();
+//                for (int i = 0; i < advFrames.size(); i++){
+//                    MinewFrame advFrame = advFrames.get(i);
+//                    FrameType frameType = advFrame.getFrameType();
+//
+//                    if (frameType == FrameiBeacon) {
+//                        IBeaconFrame iBeaconframe = (IBeaconFrame) advFrame;
+//                        int txPower = iBeaconframe.getTxPower();
+//                        int radioPower = iBeaconframe.getRadiotxPower();
+//                        int major = iBeaconframe.getMajor();
+//                        int minor = iBeaconframe.getMinor();
+//                        String iuuid = iBeaconframe.getUuid();
+//
+//
+//                        // create a uid instance
+//                        IBeaconFrame iBeaconFrame = new IBeaconFrame();
+//                        iBeaconFrame.setFrameType(FrameiBeacon);
+//                        iBeaconFrame.setMinor(111);
+//                        iBeaconFrame.setMajor(222);
+//                        iBeaconFrame.setCurSlot(1);
+//                        iBeaconFrame.setAdvtxPower(txPower);
+//                        iBeaconFrame.setRadiotxPower(radioPower);
+//                        iBeaconFrame.setAdvInterval(300);
+//                        iBeaconFrame.setUuid(iuuid);
+//
+//                        mtPeripheral.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
+//                            @Override
+//                            public void onOperation(boolean success, MTException mtException) {
+//                                if(success){
+//                                    Log.v("beaconplus","Success!");
+//                                }else{
+//                                    Log.v("beaconplus",mtException.getMessage());
+//                                }
+//                            }
+//                        });
+//
+//
+//
+//                    }
+//                }            return;
 
-
-                        // create a uid instance
-                        IBeaconFrame iBeaconFrame = new IBeaconFrame();
-                        iBeaconFrame.setFrameType(FrameiBeacon);
-                        iBeaconFrame.setMinor(111);
-                        iBeaconFrame.setMajor(222);
-                        iBeaconFrame.setCurSlot(1);
-                        iBeaconFrame.setAdvtxPower(txPower);
-                        iBeaconFrame.setRadiotxPower(radioPower);
-                        iBeaconFrame.setAdvInterval(300);
-                        iBeaconFrame.setUuid(iuuid);
-
-                        mtPeripheral.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
-                            @Override
-                            public void onOperation(boolean success, MTException mtException) {
-                                if(success){
-                                    Log.v("beaconplus","Success!");
-                                }else{
-                                    Log.v("beaconplus",mtException.getMessage());
-                                }
-                            }
-                        });
-
-
-
-                    }
-                }
 
                 //mtPeripheralSelected = mtPeripheral;
                 //mMtCentralManager.stopScan();
@@ -257,15 +260,15 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this, "READINGINFO", Toast.LENGTH_SHORT).show();
 
 //                            mMtCentralManager.stopScan();
-                            MTConnectionHandler mtConnectionHandler2 = mtPeripheralSelected.mMTConnectionHandler;
+//                            MTConnectionHandler mtConnectionHandler2 = mtPeripheralSelected.mMTConnectionHandler;
                             //mtPeripheralSelected.mMTFrameHandler.;
 // current connection status
 //                            ConnectState connectState = mtConnectionHandler2.getConnectState();
 // password require or not. None, Require
 //                            PasswordState passwordState = mtConnectionHandler2.getPasswordState();
 // device info, such as：（Firmware Version： 0.9.1）;
-                            HashMap<String, String> systeminfos = mtConnectionHandler2.systeminfos;
-                            Log.e("tag", "ZR readinginfo count "+systeminfos.size());
+//                            HashMap<String, String> systeminfos = mtConnectionHandler2.systeminfos;
+//                            Log.e("tag", "ZR readinginfo count "+systeminfos.size());
 //                            String manufacturer = systeminfos.get(Constants.manufacturer);
 //                            String modlenumber = systeminfos.get(Constants.modlenumber);
 //                            String macAddress = systeminfos.get(Constants.serialnumber);
@@ -317,6 +320,52 @@ public class MainActivity extends AppCompatActivity {
                         case COMPLETED:
                             Log.e("tag", "COMPLETED");
                             Toast.makeText(MainActivity.this, "COMPLETED", Toast.LENGTH_SHORT).show();
+
+                            List<MinewFrame> advFrames = mtPeripheralSelected.mMTFrameHandler.getAdvFrames();
+                            String name = mtPeripheralSelected.mMTFrameHandler.getName();
+                            String mac = mtPeripheralSelected.mMTFrameHandler.getMac();
+                            int rssi = mtPeripheralSelected.mMTFrameHandler.getRssi();
+                            int battery = mtPeripheralSelected.mMTFrameHandler.getBattery();
+                            for (int i = 0; i < advFrames.size(); i++){
+                                MinewFrame advFrame = advFrames.get(i);
+                                FrameType frameType = advFrame.getFrameType();
+
+                                if (frameType == FrameiBeacon) {
+                                    IBeaconFrame iBeaconframe = (IBeaconFrame) advFrame;
+                                    int txPower = iBeaconframe.getTxPower();
+                                    int radioPower = iBeaconframe.getRadiotxPower();
+                                    int major = iBeaconframe.getMajor();
+                                    int minor = iBeaconframe.getMinor();
+                                    String iuuid = iBeaconframe.getUuid();
+
+
+                                    // create a uid instance
+                                    IBeaconFrame iBeaconFrame = new IBeaconFrame();
+                                    iBeaconFrame.setFrameType(FrameiBeacon);
+                                    iBeaconFrame.setMinor(111);
+                                    iBeaconFrame.setMajor(222);
+                                    iBeaconFrame.setCurSlot(1);
+                                    iBeaconFrame.setAdvtxPower(txPower);
+                                    iBeaconFrame.setRadiotxPower(radioPower);
+                                    iBeaconFrame.setAdvInterval(300);
+//                                    iBeaconFrame.setUuid(iuuid);
+
+                                    mtPeripheralSelected.mMTConnectionHandler.writeSlotFrame(iBeaconframe, 0, new MTCOperationCallback() {
+                                        @Override
+                                        public void onOperation(boolean success, MTException mtException) {
+                                            if(success){
+                                                Log.v("beaconplus","Success!");
+                                            }else{
+                                                Log.v("beaconplus",mtException.getMessage());
+                                            }
+                                        }
+                                    });
+
+
+
+                                }
+                            }
+
                             break;
                         case CONNECTFAILED:
                         case DISCONNECTED:
